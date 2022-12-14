@@ -1,5 +1,5 @@
-use std::fs;
 use std::env;
+use std::fs;
 
 // Run as:
 // prob2 input.txt

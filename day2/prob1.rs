@@ -11,42 +11,42 @@ fn main() {
 
     let mut totalscore = 0;
     for line in input.split("\n") {
-	//dbg!(line.len());
-	let parse_result = get_two_chars(line);
-	let (them, us) = match parse_result {
-		Some(t) => (abc_to_rps(t.0), xyz_to_rps(t.1)),
-		None => break
-	};
-  	dbg!(&them);
-  	dbg!(&us);
-	let shapescore = match us {
-		Rps::Rock => 1,
-		Rps::Paper => 2,
-		Rps::Scissors => 3
-	};
-	dbg!(shapescore);
-	let result = battle(&us, &them);
-	dbg!(&result);
-	let winscore = match result {
-		Wld::Win => 6,
-		Wld::Draw => 3,
-		Wld::Lose => 0
-	};
+        //dbg!(line.len());
+        let parse_result = get_two_chars(line);
+        let (them, us) = match parse_result {
+            Some(t) => (abc_to_rps(t.0), xyz_to_rps(t.1)),
+            None => break,
+        };
+        dbg!(&them);
+        dbg!(&us);
+        let shapescore = match us {
+            Rps::Rock => 1,
+            Rps::Paper => 2,
+            Rps::Scissors => 3,
+        };
+        dbg!(shapescore);
+        let result = battle(&us, &them);
+        dbg!(&result);
+        let winscore = match result {
+            Wld::Win => 6,
+            Wld::Draw => 3,
+            Wld::Lose => 0,
+        };
         dbg!(winscore);
-	totalscore += shapescore;
-	totalscore += winscore;
+        totalscore += shapescore;
+        totalscore += winscore;
         dbg!(totalscore);
         dbg!("----");
     }
-	println!("{}", totalscore)
+    println!("{}", totalscore)
 }
 
 fn get_two_chars(s: &str) -> Option<(char, char)> {
-	match s.len() {
-		0 => return None,
-		3 => return Some((s.chars().nth(0).unwrap(), s.chars().nth(2).unwrap())),
-		_ => panic!("Malformed line")
-	}
+    match s.len() {
+        0 => return None,
+        3 => return Some((s.chars().nth(0).unwrap(), s.chars().nth(2).unwrap())),
+        _ => panic!("Malformed line"),
+    }
 }
 
 #[derive(Debug)]
@@ -61,7 +61,7 @@ fn abc_to_rps(c: char) -> Rps {
         'A' => Rps::Rock,
         'B' => Rps::Paper,
         'C' => Rps::Scissors,
-       	_ => panic!("Wrong character: {}", c)
+        _ => panic!("Wrong character: {}", c),
     }
 }
 fn xyz_to_rps(c: char) -> Rps {
@@ -69,7 +69,7 @@ fn xyz_to_rps(c: char) -> Rps {
         'X' => Rps::Rock,
         'Y' => Rps::Paper,
         'Z' => Rps::Scissors,
-       	_ => panic!("Wrong character: {}", c)
+        _ => panic!("Wrong character: {}", c),
     }
 }
 
@@ -83,12 +83,12 @@ enum Wld {
 // Returns whether first argument won, lost, or it was a draw.
 fn battle(them: &Rps, us: &Rps) -> Wld {
     match (them, us) {
-        (Rps::Rock, Rps::Rock) |
-        (Rps::Paper, Rps::Paper) |
-        (Rps::Scissors, Rps::Scissors) => Wld::Draw,
-        (Rps::Paper, Rps::Rock) |
-        (Rps::Scissors, Rps::Paper) |
-        (Rps::Rock, Rps::Scissors) => Wld::Win,
-	_ => Wld::Lose,
+        (Rps::Rock, Rps::Rock) | (Rps::Paper, Rps::Paper) | (Rps::Scissors, Rps::Scissors) => {
+            Wld::Draw
+        }
+        (Rps::Paper, Rps::Rock) | (Rps::Scissors, Rps::Paper) | (Rps::Rock, Rps::Scissors) => {
+            Wld::Win
+        }
+        _ => Wld::Lose,
     }
 }

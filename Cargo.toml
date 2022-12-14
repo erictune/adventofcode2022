@@ -1,0 +1,31 @@
+[package]
+name = "advent_of_code_2022"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "day1p1"
+path = "day1/prob1.rs"
+
+[[bin]]
+name = "day1p2"
+path = "day1/prob2.rs"
+
+[[bin]]
+name = "day2p1"
+path = "day2/prob1.rs"
+
+[[bin]]
+name = "day2p2"
+path = "day2/prob2.rs"
+
+[[bin]]
+name = "day5p1"
+path = "day5/prob1.rs"
+
+[[bin]]
+name = "day5p2"
+path = "day5/prob2.rs"
+
+
+[dependencies]

@@ -9,6 +9,10 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path = &args[1];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
+    let output = do_prob1(&input);
+}
+
+fn do_prob1(input: &str) -> String {
     let mut stacks: Vec<Vec<char>> = Vec::new();
     // Assume width of first line determines number of columns (stacks). 4 chars per stack.
     let mut lines = input.split("\n").peekable();
@@ -70,8 +74,25 @@ fn main() {
         stacks[dstidx].extend(tmp);
     }
     dbg!(&stacks);
+    let mut output: String = String::new();
     for i in 0..ncol {
-        print!("{}", helpers::last(&stacks[i]));
+        let tmp = format!("{}", helpers::last(&stacks[i]));
+        output.push_str(&tmp);
     }
-    println!("");
+    output.to_string()
+}
+
+#[test]
+fn do_prob1_with_test_input() {
+    let test_input = r#"    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2
+"#;
+    assert_eq!(do_prob1(test_input), "CMZ");
 }

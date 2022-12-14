@@ -10,6 +10,7 @@ fn main() {
     let file_path = &args[1];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let output = do_prob1(&input);
+    println!("{}", output)
 }
 
 fn do_prob1(input: &str) -> String {
@@ -74,7 +75,7 @@ fn do_prob1(input: &str) -> String {
         stacks[dstidx].extend(tmp);
     }
     dbg!(&stacks);
-    let mut output: String = String::new();
+    let mut output = String::new();
     for i in 0..ncol {
         let tmp = format!("{}", helpers::last(&stacks[i]));
         output.push_str(&tmp);

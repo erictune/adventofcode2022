@@ -2,8 +2,6 @@ use std::env;
 use std::fs;
 use std::process;
 
-mod lib;
-
 // Run as:
 // day2 [prob1|prob2] input.txt
 fn main() {
@@ -21,8 +19,8 @@ fn main() {
     let file_path = &args[2];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let output = match probnum {
-        1 => lib::do_day2_prob1(&input),
-        2 => lib::do_day2_prob2(&input),
+        1 => day2::do_day2_prob1(&input),
+        2 => day2::do_day2_prob2(&input),
         _ => panic!("invalid problem number"),
     };
     println!("{}", output)

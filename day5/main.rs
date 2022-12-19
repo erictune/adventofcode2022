@@ -2,8 +2,6 @@ use std::env;
 use std::fs;
 use std::process;
 
-mod lib;
-
 // Run as:
 // day5 [prob1|prob2] input.txt
 fn main() {
@@ -12,14 +10,15 @@ fn main() {
         println!("Usage: {}  `prob1'|`prob2' FILENAME", args[0]);
         process::exit(1);
     }
-    let topn = match args[1].as_str() {
-        "prob1" => Some(1),
-        "prob2" => Some(3),
+
+    let reversed = match args[1].as_str() {
+        "prob1" => Some(true),
+        "prob2" => Some(false),
         _ => None,
     }
-    .expect("Usage: <arg0>  `prob1'|`prob2' FILENAME");
+    .expect("Command name must be prob1 or prob2");
     let file_path = &args[2];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
-    let output = lib::do_day1(&input, topn);
+    let output = day5::do_day5(&input, reversed);
     println!("{}", output)
 }

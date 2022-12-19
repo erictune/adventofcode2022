@@ -19,7 +19,6 @@ pub fn do_day1(input: &str, topn: usize) -> i32 {
     vec2.iter().sum::<i32>()
 }
 
-
 #[test]
 fn test_do_day1() {
     let test_input = "\
@@ -41,4 +40,3 @@ fn test_do_day1() {
     assert_eq!(do_day1(test_input, 1), 24000);
     assert_eq!(do_day1(test_input, 3), 45000);
 }
-

@@ -16,8 +16,9 @@ fn main() {
     let reversed = match args[1].as_str() {
         "prob1" => Some(true),
         "prob2" => Some(false),
-        _ => None
-    }.expect("Command name must be prob1 or prob2");
+        _ => None,
+    }
+    .expect("Command name must be prob1 or prob2");
     let file_path = &args[2];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let output = lib::do_day5(&input, reversed);

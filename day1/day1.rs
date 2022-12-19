@@ -15,8 +15,9 @@ fn main() {
     let topn = match args[1].as_str() {
         "prob1" => Some(1),
         "prob2" => Some(3),
-        _ => None
-    }.expect("Usage: <arg0>  `prob1'|`prob2' FILENAME");
+        _ => None,
+    }
+    .expect("Usage: <arg0>  `prob1'|`prob2' FILENAME");
     let file_path = &args[2];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
     let output = lib::do_day1(&input, topn);

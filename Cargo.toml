@@ -20,12 +20,8 @@ name = "day2p2"
 path = "day2/prob2.rs"
 
 [[bin]]
-name = "day5p1"
-path = "day5/prob1.rs"
-
-[[bin]]
-name = "day5p2"
-path = "day5/prob2.rs"
+name = "day5"
+path = "day5/day5.rs"
 
 
 [dependencies]

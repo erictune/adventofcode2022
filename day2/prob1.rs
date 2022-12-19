@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 
 mod lib;
+
 // Run as:
 // prob1 input.txt
 // prob1 test_input.txt
@@ -9,7 +10,11 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path = &args[1];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
+    let output = do_day2_prob1(&input);
+    println!("{}", output);
+}
 
+fn do_day2_prob1(input: & str) -> i32 {
     let mut totalscore = 0;
     for line in input.split("\n") {
         //dbg!(line.len());
@@ -39,6 +44,7 @@ fn main() {
         dbg!(totalscore);
         dbg!("----");
     }
-    println!("{}", totalscore)
+    totalscore
+
 }
 

@@ -4,14 +4,18 @@ use std::fs;
 mod lib;
 
 // Run as:
-// prob1 input.txt
-// prob1 test_input.txt
+// prob2 input.txt
+// prob2 test_input.txt
 fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path = &args[1];
     let input = fs::read_to_string(file_path).expect("Should have been able to read the file");
+    let output = do_day2_prob2(&input);
+    println!("{}", output);
+}
 
-    let mut totalscore = 0;
+fn do_day2_prob2(input: & str) -> i32 {
+        let mut totalscore = 0;
     for line in input.split("\n") {
         //dbg!(line.len());
         let parse_result = lib::get_two_chars(line);
@@ -40,7 +44,8 @@ fn main() {
         totalscore += winscore;
         dbg!(totalscore);
         dbg!("----");
+        
     }
-    println!("{}", totalscore)
+    totalscore
 }
 

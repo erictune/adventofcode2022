@@ -8,12 +8,8 @@ name = "day1"
 path = "day1/day1.rs"
 
 [[bin]]
-name = "day2p1"
-path = "day2/prob1.rs"
-
-[[bin]]
-name = "day2p2"
-path = "day2/prob2.rs"
+name = "day2"
+path = "day2/day2.rs"
 
 [[bin]]
 name = "day5"

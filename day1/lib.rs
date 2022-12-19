@@ -14,7 +14,6 @@ pub fn do_day1(input: &str, topn: usize) -> i32 {
     // Print calories per elf descending
     vec.sort();
     vec.reverse();
-    //println!("{:?}", &vec[0..=2]);
     let vec2: Vec<i32> = vec[0..topn].to_vec();
     // Calories of top n elves.
     vec2.iter().sum::<i32>()

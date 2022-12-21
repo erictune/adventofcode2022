@@ -1,4 +1,7 @@
 # adventofcode2022
-Try Advent of Code 2022
+Try to solve Advent of Code 2022 while learning rust.
 
-Run day1 problem 1, for example, with `cargo build; cd day1; cargo run --bin day1p1`:w
+Each directory `day*` is a crate with a binary.
+Each binary takes `{prob1|prob2}` as an argument, followed by `input.txt`, my unique problem input.
+The website examples are used as unit test inputs.
+For example: `cd day1; cargo test; cargo run prob1 input.txt`

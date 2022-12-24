@@ -1,6 +1,12 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
-fn commands_to_filesizelist(commandlog: &str) -> Result<HashSet<i32>, String> {
+#[derive(Debug, PartialEq, Clone)]
+pub enum FileOrDirInfo {
+    Dir { name: String },
+    File { name: String, size: i64 },
+}
+
+fn commands_to_filesizelist(commandlog: &str) -> Result<Vec<FileOrDirInfo>, String> {
     // cd .. pops
     // cd <x> pushes
     // cd / clears stack
@@ -12,6 +18,7 @@ fn commands_to_filesizelist(commandlog: &str) -> Result<HashSet<i32>, String> {
     let mut linenum = 0;
     let mut lsmode = false; // Expecting next line to be a command when true, else expecting output.
     let mut path = Vec::<String>::new();
+    let mut filesizelist = Vec::<FileOrDirInfo>::new();
     path.push(String::from("/"));  // Assume we are at the root dir.
     let mut ii = commandlog.split("\n"); 
     // Ensure we start by going to the root dir.
@@ -23,6 +30,7 @@ fn commands_to_filesizelist(commandlog: &str) -> Result<HashSet<i32>, String> {
     if firstlineopt != Some("$ cd /") {
         return Err(format!("L{}: First line was not '$ cd /'", linenum));
     }
+    filesizelist.push(FileOrDirInfo::Dir { name: "/".to_string(),});
     loop {
         // Examine the next line.
         let lineopt = ii.next();    
@@ -50,12 +58,12 @@ fn commands_to_filesizelist(commandlog: &str) -> Result<HashSet<i32>, String> {
                     return Err(format!("L{}: Error: ls command has argument.", linenum));
                 }
                 lsmode = true;
-                println!("L{}: Line begins ls mode", linenum);
+                //println!("L{}: Line begins ls mode", linenum);
 
             },
             ("$", "cd", dir) => {
                 if lsmode { 
-                    println!("L{}: Line ends ls mode", linenum);
+                    //println!("L{}: Line ends ls mode", linenum);
                     lsmode = false;
                 }
                 match dir {
@@ -65,7 +73,7 @@ fn commands_to_filesizelist(commandlog: &str) -> Result<HashSet<i32>, String> {
                     "/" => path.clear(),
                     _ => path.push(format!("{}/", dir)),
                 };
-                println!("L{}: New working dir: {}", linenum, path.join(""));
+                //println!("L{}: New working dir: {}", linenum, path.join(""));
             },
             (a, b, c)=> {
                 if !lsmode {
@@ -76,19 +84,182 @@ fn commands_to_filesizelist(commandlog: &str) -> Result<HashSet<i32>, String> {
                 }
                 match (a, b) {
                     ("dir", dirname) => {
-                        println!("L{}:  found dir with absolute path {}{}", linenum, path.join(""), dirname);
+                        let abspath = format!("{}{}", path.join(""), dirname);
+                        //println!("L{}:  found dir with absolute path {:#?}", linenum, abspath);
+                        let fdi = FileOrDirInfo::Dir {name: abspath};
+                        filesizelist.push(fdi);
                     },
-                    (size, filename) => {
-                        println!("L{}:  found abspath file {}{} with size {}", linenum, path.join(""), filename, size);
+                    (sizestr, filename) => {
+                        let abspath = format!("{}{}", path.join(""), filename);
+                        let size: i64 = sizestr.parse::<i64>().unwrap();
+                        //println!("L{}:  found file with (size, abspath): ({}, {})", linenum, size, abspath);
+                        let fdi = FileOrDirInfo::File { name: abspath, size: size };
+                        filesizelist.push(fdi);
                     },
                 };
             },
         };
     }
-    Ok(HashSet::new())
+    Ok(filesizelist)
 }
 
-const TEST_INPUT: &str = "\
+
+#[test]
+fn test_commands_to_filesizelist_goodinput() {
+    const SIMPLE_TEST_INPUT: &str = "\
+$ cd /
+$ ls
+dir a
+10 x.txt
+20 y.dat
+$ cd a
+$ ls
+30 z.json
+";
+    let result = commands_to_filesizelist(SIMPLE_TEST_INPUT);
+    assert!(result.is_ok());
+    let fsl = result.unwrap();
+    dbg!(&fsl);
+    let expected = vec![
+        FileOrDirInfo::Dir{ name: "/".to_string() },
+        FileOrDirInfo::Dir{ name: "/a".to_string() },
+        FileOrDirInfo::File{ name: "/x.txt".to_string(), size: 10_i64 }, 
+        FileOrDirInfo::File{ name: "/y.dat".to_string(), size: 20_i64 }, 
+        FileOrDirInfo::File{ name: "/a/z.json".to_string(), size: 30_i64 }, 
+    ];
+    assert_eq!(&fsl, &expected);
+}
+
+#[test]
+fn test_commands_to_filesizelist_badinputs() {
+    const NO_ROOT: &str = "\
+$ ls
+dir a
+10 x.txt
+";
+    let result = commands_to_filesizelist(NO_ROOT);
+    assert!(!result.is_ok());
+
+    const NONSENSE: &str = "\
+la la la la la 
+";
+    let result = commands_to_filesizelist(NONSENSE);
+    assert!(!result.is_ok());
+}
+
+// Something like std::path::Path::Ancestors iterator, but without OsStr.
+struct PathAncestors<'a> {
+    v: Vec<&'a str>,
+}
+
+impl<'a> Iterator for PathAncestors<'a> {
+    type Item = String;
+    fn next(&mut self) -> Option<Self::Item> {
+        // Pop off the path component used in the previous iteration.
+        // In the case of the first iteration, there is a dummy final empty string to pop.
+        // This is ensured by the constructor.
+        let ret = match (self.v.len(), self.v.get(0)) {
+            (_, None) | (0, _) => None,
+            (1, Some(&"")) =>  {
+                // For absolute path, the final item popped is "", but we want to return "/"
+                Some(String::from("/"))
+            },
+            (_, _) => {
+                Some(self.v.join("/"))
+            },
+        };
+        self.v.pop();
+        ret
+    }
+}
+
+/// Returns a PathAncestors sequence generator.
+/// Does not check for degenerate paths like "/a//b".
+/// Does not handle OS specific paths, like "c:\a\b".
+/// Same iterations returned for "/a/b/" and "/a/b".
+/// For absolute path, last iteration returns "/".
+fn path_ancestors(s: &str) -> PathAncestors {
+    // Remove any final / so we don't return something like "/a/b/".
+    let mut tmp = s;
+    if s.ends_with("/") {
+        tmp = s.strip_suffix("/").expect("Should have been able to strip string.");
+    }
+    PathAncestors { 
+        v: tmp.clone().split("/").collect(), 
+    }
+}
+
+#[test]
+fn test_path_ancestors(){
+    let mut pa = path_ancestors("/foo/bar");
+    assert_eq!(pa.next(), Some(String::from("/foo/bar")));
+    assert_eq!(pa.next(), Some(String::from("/foo")));
+    assert_eq!(pa.next(), Some(String::from("/")));
+    assert_eq!(pa.next(), None);
+    assert_eq!(pa.next(), None);
+}
+
+
+fn compute_dir_sizes(filesizelist: Vec<FileOrDirInfo>) -> HashMap<String, i64> {
+   let mut h = HashMap::<String, i64>::new();
+   for item in filesizelist {
+    match item {
+        FileOrDirInfo::Dir { name } => {
+            // Add entry for dir as zero if not already present
+            if !h.contains_key(&name) {
+                h.insert(name, 0);
+            }
+        }, 
+        FileOrDirInfo::File { name, size } => {
+            // iterate up the dir ancestor, adding size to each ancestor dir.
+            let ancestors = path_ancestors(name.as_str());
+            let mut i: usize = 0;
+            for path in ancestors {
+                // Skip first component which is filename, not dir.
+                if i == 0 { i+=1; continue; }
+                i+=1;
+                *h.get_mut(&path).expect("Should have found parent dir") += size;
+            }
+        }, 
+    }
+   }
+   h
+}
+
+#[test]
+fn test_compute_dir_sizes() {
+    let filesizelist = vec![
+        FileOrDirInfo::Dir{ name: "/".to_string() },
+        FileOrDirInfo::Dir{ name: "/a".to_string() },
+        FileOrDirInfo::File{ name: "/x.txt".to_string(), size: 10_i64 }, 
+        FileOrDirInfo::File{ name: "/y.dat".to_string(), size: 20_i64 }, 
+        FileOrDirInfo::File{ name: "/a/z.json".to_string(), size: 35_i64 }, 
+    ];
+    let hm = compute_dir_sizes(filesizelist);
+    assert_eq!(hm.len(), 2);
+    assert!(hm.contains_key("/"));
+    assert!(hm.contains_key("/a"));
+    assert_eq!(*hm.get("/").unwrap(), 65_i64);
+    assert_eq!(*hm.get("/a").unwrap(), 35_i64);
+}
+
+/// Solve day7 problem from Advent of Code 2022.
+pub fn do_day7(input: &str, _mode: i32) -> String {
+    let result = commands_to_filesizelist(input);
+    if let Err(s) = result {
+        panic!("{}", s)    
+    }
+    let fsl = result.unwrap();
+    let hm = compute_dir_sizes(fsl);
+    // filter to the directories with a total size of at most 100000, then calculate the sum of their total sizes.
+    let total_100kb_or_less: i64 = hm.values().filter(|x| **x <= 100_000_i64).sum();
+    return format!("{}", total_100kb_or_less)
+}
+
+
+#[test]
+fn test_do_day7_with_prob1_test_input() {
+    const ADVENT_TEST_INPUT: &str = "\
 $ cd /
 $ ls
 dir a
@@ -113,41 +284,7 @@ $ ls
 5626152 d.ext
 7214296 k
 ";
-
-#[test]
-fn test_commands_to_filesizelist() {
-    let result = commands_to_filesizelist(TEST_INPUT);
-    assert!(result.is_ok());
-    let _fsl = result.unwrap();
-    let _expected_items = vec![
-        ("/a/e", 584, 1), 
-        ("/a", 94853, 2), 
-        ("/d", 24933642, 3),
-        ("/",  48381165, 4),
-    ];
-    // Compare row-wise or use a vector comparer?
-    // assert_eq!(fsmap, expected);
+    let expected = format!("{}", 95437);
+    let actual = do_day7(ADVENT_TEST_INPUT, 1);
+    assert_eq!(String::from(expected), actual);
 }
-
-/// Solve day7 problem from Advent of Code 2022.
-pub fn do_day7(input: &str, _mode: i32) -> String {
-    let result = commands_to_filesizelist(input);
-    match result {
-        Ok(fsl) => return format!("{:#?}", fsl),
-        Err(s) => panic!("{}", s),
-    }
-    // find all of the directories with a total size of at most 100000, then calculate the sum of their total sizes.
-}
-
-#[test]
-fn test_do_day7_with_prob1_test_input() {
-    let _expected = 95437;
-    let _fsl = commands_to_filesizelist(TEST_INPUT);
-
-}
-//#[test]
-//fn test_do_day7_with_prob1_test_inputs() {
-//    for (input, expected, casenum) in cases {
-//        assert_eq!(do_day7(input, 4), expected, "in case number {}", casenum);
-//    }
-//}

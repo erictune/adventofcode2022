@@ -12,8 +12,8 @@ fn main() {
     }
 
     let mode = match args[1].as_str() {
-        "prob1" => 4,
-        "prob2" => 14,
+        "prob1" => 1,
+        "prob2" => 2,
         _ => panic!("unspecified problem number"),
     };
     let file_path = &args[2];

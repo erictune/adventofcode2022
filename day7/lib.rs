@@ -244,7 +244,7 @@ fn test_compute_dir_sizes() {
 }
 
 /// Solve day7 problem from Advent of Code 2022.
-pub fn do_day7(input: &str, _mode: i32) -> String {
+pub fn do_day7(input: &str, mode: i32) -> String {
     let result = commands_to_filesizelist(input);
     if let Err(s) = result {
         panic!("{}", s)    
@@ -252,14 +252,45 @@ pub fn do_day7(input: &str, _mode: i32) -> String {
     let fsl = result.unwrap();
     let hm = compute_dir_sizes(fsl);
     // filter to the directories with a total size of at most 100000, then calculate the sum of their total sizes.
-    let total_100kb_or_less: i64 = hm.values().filter(|x| **x <= 100_000_i64).sum();
-    return format!("{}", total_100kb_or_less)
+    match mode {
+        1 => {
+            let total_100kb_or_less: i64 = hm.values().filter(|x| **x <= 100_000_i64).sum();
+            format!("{}", total_100kb_or_less)
+        },
+        2 => {
+            // Free space must be 30000000 of 70000000.
+            let free_space_req: i64 = 30000000;
+            let storage_size: i64 =   70000000;
+            let used_space_start: i64 = *hm.get("/").unwrap();
+            let free_space_start: i64 = storage_size - used_space_start;
+            let mut delete_at_least: i64 = 0;
+            if free_space_start < free_space_req {
+                delete_at_least = free_space_req - free_space_start;
+            }
+            
+            let size_of_dir_to_delete = hm.values()
+                .filter(|x| **x >= delete_at_least)
+                .min().unwrap();
+            // Wasn't able to figure out how to get the key of the min dir with functional programming.
+            // Where is argmin?
+            // let mut dir_to_delete: (String, i64) = (String::from("ERROR"), i64::MAX);
+            // for (k, v) in hm {
+            //     if v < free_space_req { continue; }
+            //    if v < dir_to_delete.1 {
+            //        dir_to_delete = (k, v);
+            //    }
+            //}
+            //dbg!(&dir_to_delete);
+            //format!("used: {} free: {} need_to_free: {}, size_of_dir_to_delete: {}", used_space_start, free_space_start, delete_at_least, size_of_dir_to_delete)
+            format!("{}", size_of_dir_to_delete)
+
+        },
+        _ => panic!("Invalid mode"),
+    }
 }
 
-
-#[test]
-fn test_do_day7_with_prob1_test_input() {
-    const ADVENT_TEST_INPUT: &str = "\
+#[cfg(test)]
+const ADVENT_TEST_INPUT: &str = "\
 $ cd /
 $ ls
 dir a
@@ -284,7 +315,17 @@ $ ls
 5626152 d.ext
 7214296 k
 ";
+
+#[test]
+fn test_do_day7_prob1_test_input() {
     let expected = format!("{}", 95437);
     let actual = do_day7(ADVENT_TEST_INPUT, 1);
+    assert_eq!(String::from(expected), actual);
+}
+
+#[test]
+fn test_do_day7_prob2_test_input() {
+    let expected = format!("{}", 24933642);
+    let actual = do_day7(ADVENT_TEST_INPUT, 2);
     assert_eq!(String::from(expected), actual);
 }

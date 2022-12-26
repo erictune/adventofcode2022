@@ -67,18 +67,16 @@ CrZsJsPPZsGzwwsLwLmpwMDw
 pub fn do_day3_prob2(input: &str) -> i32 {
     let mut total = 0;
     let mut lines = input.split("\n").peekable();
-    loop {
-        if let Some(l) = lines.peek() {
-            let a = lines.next().expect("Expected more lines");
-            if a == "" { break; }  // Last carriage return may return empty string when split.
-            let b = lines.next().expect("Expected more lines");
-            let c = lines.next().expect("Expected more lines");
-            let ab: String = shared_chars(&a, &b).iter().collect();
-            let abc = shared_chars(&ab, &c);
-            assert!(abc.len() == 1);
-            let p = prio(abc[0]);
-            total += p;
-        } else { break; }
+    while !lines.peek().is_none() {
+        let a = lines.next().expect("Expected more lines");
+        if a == "" { break; }  // Last carriage return may return empty string when split.
+        let b = lines.next().expect("Expected more lines");
+        let c = lines.next().expect("Expected more lines");
+        let ab: String = shared_chars(&a, &b).iter().collect();
+        let abc = shared_chars(&ab, &c);
+        assert!(abc.len() == 1);
+        let p = prio(abc[0]);
+        total += p;
     }
     total
 }

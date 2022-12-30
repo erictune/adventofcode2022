@@ -1,3 +1,5 @@
+use grid::*;
+
 #[derive(Debug, PartialEq)]
 pub enum GridParseError {
     BadDigit,
@@ -7,22 +9,25 @@ pub enum GridParseError {
 
 // TODO: find a grid crate or make a struct out of (rows, cols, grid)
 
-/// Read an array of digits in a text file to a Vec<Vec<u8>>.
+/// Read an array of digits in a text file to a grid::Grid.
 /// Args:
 /// input: string with newlines read from a file, containing array of digits.
 /// Returns (r, c, grid) where:
 /// r = number of rows
 /// c = number of columns
 /// grid[r-][c-1] is number in 0..=9 from row r, column c for text file(0-based)
-pub fn digit_text_to_u8_grid(input: &str) -> Result<(usize, usize, Vec<Vec<u8>>), GridParseError> {
-    let mut grid: Vec<Vec<u8>> = vec![];
+pub fn digit_text_to_u8_grid(input: &str) -> Result<(usize, usize, Grid<u8>), GridParseError> {
+    let mut grid: Grid<u8> = grid![];
+
     // I tried to do something functional like this:
     // input.split("\n").map(|line| line.map(|ch| ch.parse::<u8> ...))
     // but I could not find a clean way to return parse errors from the inner closure.
     // My conclusion is that functional is great when you don't have to handle errors, but
     // imperative code is fine when you have a lot of things to check.
-    let mut saw_blank = false;
+    let mut lineno = 0;
+    let mut saw_blank: bool = false;
     for line in input.split("\n") {
+        lineno += 1;
         // A Final blank line is okay, but a non-final one is not.
         if saw_blank {
             return Err(GridParseError::NonFinalBlankLine);
@@ -39,29 +44,35 @@ pub fn digit_text_to_u8_grid(input: &str) -> Result<(usize, usize, Vec<Vec<u8>>)
                 Ok(digit) => row.push(digit),
             }
         }
-        grid.push(row);
+        if lineno > 1 {
+            if row.len() != grid.cols() {
+                return Err(GridParseError::RaggedRows);
+            }
+        }
+        grid.push_row(row);
     }
     // Check all rows have ncols
-    let rows = grid.len();
-    let mincols = grid.iter().map(|r| r.len()).min().unwrap();
-    let maxcols = grid.iter().map(|r| r.len()).max().unwrap();
-    if mincols != maxcols {
-        return Err(GridParseError::RaggedRows);
-    }
-    Ok((rows, mincols, grid))
+    println!("{:?}", grid.size());
+    Ok((grid.rows(), grid.cols(), grid))
 }
 
 #[test]
 fn test_digit_text_to_u8_grid_good_nocr() {
-    assert_eq!(
-        digit_text_to_u8_grid(
-            "\
+    let result = digit_text_to_u8_grid(
+        "\
 12
-12"
-        ),
-        Ok((2, 2, vec![vec![1, 2], vec![1, 2]]))
+12",
     );
+    assert!(result.is_ok());
+    let (nr, nc, grid) = result.unwrap();
+    assert_eq!(nr, 2);
+    assert_eq!(nc, 2);
+    assert_eq!(grid[0][0], 1);
+    assert_eq!(grid[0][1], 2);
+    assert_eq!(grid[1][0], 1);
+    assert_eq!(grid[1][1], 2);
 }
+
 #[test]
 fn test_digit_text_to_u8_grid_bad_middle_cr() {
     assert_eq!(
@@ -99,7 +110,7 @@ fn test_digit_text_to_u8_grid_bad_ragged() {
     );
 }
 
-pub fn display_grid(rows: usize, cols: usize, grid: &Vec<Vec<u8>>) -> String {
+pub fn display_grid(rows: usize, cols: usize, grid: &Grid<u8>) -> String {
     let mut s = String::new();
     for r in 0..rows {
         for c in 0..cols {
@@ -112,8 +123,6 @@ pub fn display_grid(rows: usize, cols: usize, grid: &Vec<Vec<u8>>) -> String {
 
 #[test]
 fn test_display_grid() {
-    assert_eq!(
-        "12\n34\n",
-        display_grid(2, 2, &vec![vec![1, 2], vec![3, 4]])
-    );
+    let grid = Grid::from_vec(vec![1, 2, 3, 4], 2);
+    assert_eq!("12\n34\n", display_grid(2, 2, &grid));
 }

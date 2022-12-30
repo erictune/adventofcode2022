@@ -1,6 +1,7 @@
 mod loadgrid;
 use crate::loadgrid::digit_text_to_u8_grid;
 use crate::loadgrid::display_grid;
+use grid::*;
 
 /// Solve day8 problem from Advent of Code 2022.
 pub fn do_day8(input: &str, mode: i32) -> String {
@@ -9,7 +10,7 @@ pub fn do_day8(input: &str, mode: i32) -> String {
         _ => unimplemented!(),
     };
     let (rows, cols, grid) = digit_text_to_u8_grid(input).unwrap();
-    let mut visible: Vec<Vec<u8>> = (0..rows).map(|_| vec![0; cols]).collect();
+    let mut visible: Grid<u8> = Grid::new(rows, cols);
     // Edge trees are going to be visible because we will start the with max-height-seen value of -1.
     const INITIAL_MAX: i32 = -1;
     // for c in 1..=cols-1 {
@@ -83,11 +84,7 @@ pub fn do_day8(input: &str, mode: i32) -> String {
     println!("{}", display_grid(rows, cols, &grid));
     println!("{}", display_grid(rows, cols, &visible));
 
-    // The problem with using a u8 is that you can't use sum()
-    let num_vis: u64 = visible
-        .iter()
-        .map(|v| v.iter().fold(0u64, |sum, n| sum + (*n as u64)))
-        .sum();
+    let num_vis: u64 = visible.iter().fold(0u64, |sum, n| sum + (*n as u64));
 
     if mode == 1 {
         return String::from(format!("{}", num_vis));

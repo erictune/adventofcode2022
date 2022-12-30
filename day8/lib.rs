@@ -88,7 +88,17 @@ pub fn do_day8(input: &str, mode: i32) -> String {
         .iter()
         .map(|v| v.iter().fold(0u64, |sum, n| sum + (*n as u64)))
         .sum();
-    format!("{}", num_vis)
+
+    if mode == 1 {
+        return String::from(format!("{}", num_vis));
+    }
+    String::from("Unimplemented")
+    // TODO: try reimplementing above with the `grid` crate at https://docs.rs/grid/latest/grid/.
+    // Can have two implementations side by side to compare.
+
+    // TODO: prob 2 - for each non-visible tree, compute its scenic potential.
+    // Given a starting point (r,c) you can move in a compass direction by adding one of these to it:
+    // (0, 1), (0, -1), (1, 0), (-1, 0).
 }
 
 #[cfg(test)]

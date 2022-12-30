@@ -144,63 +144,52 @@ pub fn do_day8(input: &str, mode: i32) -> String {
     let mut visible: Grid<u8> = Grid::new(rows, cols);
     // Edge trees are going to be visible because we will start the with max-height-seen value of -1.
     const INITIAL_MAX: i32 = -1;
-
-    println!("from north to south");
-    // Looking south from the north side, checking full column at a time.
+    // Check each column north and south.
     for c in 0..=cols - 1 {
-        let mut max = INITIAL_MAX;
-        for r in 0..=rows - 1 {
-            if grid[r][c] as i32 > max {
-                max = grid[r][c] as i32;
-                visible[r][c] = 1;
+        {
+            // Looking south along this column from the north side.
+            let mut max = INITIAL_MAX;
+            for r in 0..=rows - 1 {
+                if grid[r][c] as i32 > max {
+                    max = grid[r][c] as i32;
+                    visible[r][c] = 1;
+                }
+            }    
+        }
+        {   // Looking north along this column from the south side
+            let mut max = INITIAL_MAX;
+            for r in (0..=rows - 1).rev() {
+                if grid[r][c] as i32 > max {
+                    max = grid[r][c] as i32;
+                    visible[r][c] = 1;
+                }
             }
         }
     }
-    println!("{}", display_grid(rows, cols, &grid));
-    println!("{}", display_grid(rows, cols, &visible));
+    // Check each row east and west.
 
-    println!("from south");
-    // Looking north from the south side, checking full column at a time.
-    // Skip the first and last column, as they are visible by problem definition.
-    for c in 0..=cols - 1 {
-        let mut max = INITIAL_MAX; // The first item is the highest seen so far.
-                                   // Skip the first row and last row, as they are visible by problem definition.
-        for r in (0..=rows - 1).rev() {
-            if grid[r][c] as i32 > max {
-                max = grid[r][c] as i32;
-                visible[r][c] = 1;
-            }
-        }
-    }
-    println!("{}", display_grid(rows, cols, &grid));
-    println!("{}", display_grid(rows, cols, &visible));
+    // To debug intermediate results:
+    // println!("{}", display_grid(rows, cols, &grid));
+    // println!("{}", display_grid(rows, cols, &visible));
 
-    println!("from west");
-    // Looking east from the west side, checking full row at a time.
-    // Skip the first and last row, as they are visible by problem definition.
     for r in 0..=rows - 1 {
-        let mut max = INITIAL_MAX; // The first item is the highest seen so far.
-                                   // Skip the first row and last row, as they are visible by problem definition.
-        for c in 0..=cols - 1 {
-            if grid[r][c] as i32 > max {
-                max = grid[r][c] as i32;
-                visible[r][c] = 1;
+        {
+            // Looking east from the west side, checking full row at a time.
+            let mut max = INITIAL_MAX; 
+            for c in 0..=cols - 1 {
+                if grid[r][c] as i32 > max {
+                    max = grid[r][c] as i32;
+                    visible[r][c] = 1;
+                }
             }
         }
-    }
-    println!("{}", display_grid(rows, cols, &grid));
-    println!("{}", display_grid(rows, cols, &visible));
-
-    println!("from east");
-    // Looking west from the east side, checking full row at a time.
-    // Skip the first and last row, as they are visible by problem definition.
-    for r in 0..=rows - 1 {
-        let mut max = INITIAL_MAX; // The first item is the highest seen so far.
-                                   // Skip the first row and last row, as they are visible by problem definition.
-        for c in (0..=cols - 1).rev() {
-            if grid[r][c] as i32 > max {
-                max = grid[r][c] as i32;
-                visible[r][c] = 1;
+        {        
+            let mut max = INITIAL_MAX; 
+            for c in (0..=cols - 1).rev() {
+                if grid[r][c] as i32 > max {
+                    max = grid[r][c] as i32;
+                    visible[r][c] = 1;
+                }
             }
         }
     }
@@ -222,10 +211,6 @@ pub fn do_day8(input: &str, mode: i32) -> String {
             best_scenic_score = max(best_scenic_score, scenic_score(r, c, &grid));
         }
     }
-
-    // TODO: prob 2 - for each non-visible tree, compute its scenic potential.
-    // Given a starting point (r,c) you can move in a compass direction by adding one of these to it:
-    // (0, 1), (0, -1), (1, 0), (-1, 0).
 
     return String::from(format!("{}", best_scenic_score));
 }

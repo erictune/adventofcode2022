@@ -1,6 +1,8 @@
 # Presently
-day 8: problem 2 - scenic score
+day 9
 
+consider contributing a directional iterator method to the grid crate:
+Grid::iter_dir({N|S|E|W}, start_x, start_y) : returns an iterator that moves up, down, left or right starting from a point on the grid.
 
 # After AoC
 

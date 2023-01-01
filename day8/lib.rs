@@ -7,8 +7,9 @@ use std::cmp::max;
 // Count the number of items in iterator less than h and count the first item >= h.
 /// Stops counting at the end of the iterator.
 /// Counts and immediately returns on the first item >= h.
-fn count_to_first_ge_incl<T: Iterator>(ii: T, h: T::Item)  -> usize
-    where T::Item: PartialOrd
+fn count_to_first_ge_incl<T: Iterator>(ii: T, h: T::Item) -> usize
+where
+    T::Item: PartialOrd,
 {
     let mut n = 0;
     for t in ii {
@@ -23,14 +24,17 @@ fn count_to_first_ge_incl<T: Iterator>(ii: T, h: T::Item)  -> usize
 
 #[test]
 fn test_count_to_first_ge_incl() {
-    assert_eq!(count_to_first_ge_incl(vec![1,2,3,4,5].iter(), &5), 5); 
-    assert_eq!(count_to_first_ge_incl(vec![1,2,1,2,1,2,3,4,5].iter(), &5), 9); 
-    assert_eq!(count_to_first_ge_incl(vec![1,2,3,4,5].iter(), &6), 5); 
-    assert_eq!(count_to_first_ge_incl(vec![1,2,3,4,5].iter(), &4), 4); 
-    assert_eq!(count_to_first_ge_incl(vec![1,2,3,4,5].iter(), &0), 1); 
-    assert_eq!(count_to_first_ge_incl(vec![].iter(), &5), 0); 
-    assert_eq!(count_to_first_ge_incl(vec![6,7,8,9,10].iter(), &5), 1); 
-    assert_eq!(count_to_first_ge_incl(vec![5,4,3,2,1].iter(), &6), 5); 
+    assert_eq!(count_to_first_ge_incl(vec![1, 2, 3, 4, 5].iter(), &5), 5);
+    assert_eq!(
+        count_to_first_ge_incl(vec![1, 2, 1, 2, 1, 2, 3, 4, 5].iter(), &5),
+        9
+    );
+    assert_eq!(count_to_first_ge_incl(vec![1, 2, 3, 4, 5].iter(), &6), 5);
+    assert_eq!(count_to_first_ge_incl(vec![1, 2, 3, 4, 5].iter(), &4), 4);
+    assert_eq!(count_to_first_ge_incl(vec![1, 2, 3, 4, 5].iter(), &0), 1);
+    assert_eq!(count_to_first_ge_incl(vec![].iter(), &5), 0);
+    assert_eq!(count_to_first_ge_incl(vec![6, 7, 8, 9, 10].iter(), &5), 1);
+    assert_eq!(count_to_first_ge_incl(vec![5, 4, 3, 2, 1].iter(), &6), 5);
 }
 
 /// View distance from point (r,c) looking north (0,0 is NW-most point).
@@ -62,7 +66,6 @@ fn w_view(r: usize, c: usize, grid: &Grid<u8>) -> usize {
     let scan_start = grid.iter_row(r).rev().skip(grid.cols() - c);
     count_to_first_ge_incl(scan_start, &h)
 }
-
 
 #[test]
 fn test_view_aoc() {
@@ -139,7 +142,9 @@ fn test_scenic_score() {
 }
 /// Solve day8 problem from Advent of Code 2022.
 pub fn do_day8(input: &str, mode: i32) -> String {
-    if mode != 1 && mode != 2 { unimplemented!("Unknown mode"); }
+    if mode != 1 && mode != 2 {
+        unimplemented!("Unknown mode");
+    }
     let (rows, cols, grid) = digit_text_to_u8_grid(input).unwrap();
     let mut visible: Grid<u8> = Grid::new(rows, cols);
     // Edge trees are going to be visible because we will start the with max-height-seen value of -1.
@@ -154,9 +159,10 @@ pub fn do_day8(input: &str, mode: i32) -> String {
                     max = grid[r][c] as i32;
                     visible[r][c] = 1;
                 }
-            }    
+            }
         }
-        {   // Looking north along this column from the south side
+        {
+            // Looking north along this column from the south side
             let mut max = INITIAL_MAX;
             for r in (0..=rows - 1).rev() {
                 if grid[r][c] as i32 > max {
@@ -175,7 +181,7 @@ pub fn do_day8(input: &str, mode: i32) -> String {
     for r in 0..=rows - 1 {
         {
             // Looking east from the west side, checking full row at a time.
-            let mut max = INITIAL_MAX; 
+            let mut max = INITIAL_MAX;
             for c in 0..=cols - 1 {
                 if grid[r][c] as i32 > max {
                     max = grid[r][c] as i32;
@@ -183,8 +189,8 @@ pub fn do_day8(input: &str, mode: i32) -> String {
                 }
             }
         }
-        {        
-            let mut max = INITIAL_MAX; 
+        {
+            let mut max = INITIAL_MAX;
             for c in (0..=cols - 1).rev() {
                 if grid[r][c] as i32 > max {
                     max = grid[r][c] as i32;
@@ -237,4 +243,3 @@ fn test_do_day8_prob2_test_input() {
     let actual = do_day8(ADVENT_TEST_INPUT, 2);
     assert_eq!(String::from(expected), actual);
 }
-

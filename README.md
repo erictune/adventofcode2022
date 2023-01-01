@@ -48,7 +48,10 @@ Handling more complex parsing - using match over if/then seemed hard at first, b
 Defining a custom error type as an enum to provide details.
 `fold()` method on iterators.
 Defining an additional module within a crate -  [good reference](https://www.sheshbabu.com/posts/rust-module-system/)).
-Working with nested vectors - error handling is tricky.  
+Working with nested vectors - error handling is tricky. 
+Defining a function that operates on iterators using type bounds on the iterator type and its item type.
+Used crate "grid" which lets you iterate over a 2d-like array rowwise or columnwise.  Very cool how the lazy
+iterators stack up to let you go in any direction.
 
 ### Longer Notes
 

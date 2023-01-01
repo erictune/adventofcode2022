@@ -1,7 +1,8 @@
 # Presently
-day 9
+Write an "FinalBlankOnly line iterator"
+Write a tuple-yielding iterator for files with fixed number fixed-typed of items per line.
 
-consider contributing a directional iterator method to the grid crate:
+Consider writing a directional iterator method, which could complement the grid crate:
 Grid::iter_dir({N|S|E|W}, start_x, start_y) : returns an iterator that moves up, down, left or right starting from a point on the grid.
 
 # After AoC

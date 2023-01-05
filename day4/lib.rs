@@ -133,9 +133,7 @@ pub fn do_day4(input: &str, mode: i32)-> String {
     let mut containments = 0;
     let mut overlaps = 0;
 
-    for line in input.split("\n") {
-        let l = line.len();
-        if l == 0 { continue; }
+    for line in input.split("\n").filter(|&l| l.len() > 0) {
         let (r1, r2) = parse_range_pair_from_str(line).expect("Should be able to parse range pair.");
         if  r1.fully_contains(r2) || r2.fully_contains(r1) {
             containments += 1;

@@ -4,17 +4,18 @@ use crate::monkeys::Monkeys;
 //use crate::monkeys::Monkey;
 
 pub fn do_day11(input: &str, mode: i32) -> String {
-    let iters = match mode {
-        1 => 20,
-        2 => 10_000,
+    let (iters, divide_by_three) = match mode {
+        1 => (20, true),
+        2 => (10_000, false),
         _ => panic!("Unknown mode"),
     };
     let mut m = Monkeys::new_from_file(input);
+    m.set_gcd();
 
-    // Run the program 20 steps.
+    // Run the program 20 or 10k steps.
     for _ in 1..=iters {
-        print!("{}", m.pretty());
-        m.do_round();
+        // print!("{}", m.pretty());
+        m.do_round(divide_by_three);
     }
     return String::from(format!("{}", m.monkey_business()));
 }
@@ -52,6 +53,8 @@ Monkey 3:
 
 #[cfg(test)]
 const AOC_TEST_MONKEY_BUSINESS_LEVEL: u32 = 10605;
+#[cfg(test)]
+const AOC_TEST_MONKEY_BUSINESS_LEVEL_PROB2: u32 = 2713310158;
 
 // Test the example from AoC Day 11 including parsing input.
 #[test]
@@ -63,10 +66,7 @@ fn test_do_day11_prob1_test_input() {
 
 #[test]
 fn test_do_day11_prob2_test_input() {
-    //let actual = do_day11(AOC_TEST_INPUT, 2);
-    //let expected = String::from("blah");
-    //println!("actual:\n{}", actual);
-    //println!("expected:\n{}", expected);
-
-    //assert_eq!(expected, actual);
+  let expected = format!("{}", AOC_TEST_MONKEY_BUSINESS_LEVEL_PROB2);
+  let actual = do_day11(AOC_TEST_INPUT, 2);
+  assert_eq!(expected, actual);
 }

@@ -6,30 +6,32 @@ type MonkeyId = usize;
 
 type ItemOp = Box<dyn Fn(ItemVal) -> ItemVal>;
 
-type RouteOp = Box<dyn Fn(ItemVal) -> MonkeyId>;
-
 struct Monkey {
     id: usize,
     items: VecDeque<ItemVal>,
     item_op: ItemOp,
-    route_op: RouteOp,
+    divisor: ItemVal,
+    target_t: MonkeyId,
+    target_f: MonkeyId,
     inspections: u32,
 }
 
 impl Monkey {
-    pub fn new(id: usize, items: VecDeque<ItemVal>, item_op: ItemOp, route_op: RouteOp) -> Self {
+    pub fn new(id: MonkeyId, items: VecDeque<ItemVal>, item_op: ItemOp, divisor: ItemVal, t: MonkeyId, f: MonkeyId) -> Self {
         Monkey {
             id: id,
             items: items,
             item_op: item_op,
-            route_op: route_op,
+            divisor: divisor,
+            target_t: t,
+            target_f: f,
             inspections: 0,
         }
     }
 
     pub fn new_from_lines(lineblockstr: &str) -> Monkey {
         let lines = lineblockstr.split("\n").collect::<Vec<&str>>();
-        dbg!(&lines);
+        //dbg!(&lines);
         assert!(lines.len() == 6 || (lines.len() == 7 && lines[6] == ""));
         // "Monkey 0:"
         let id = lines[0].chars().skip(7).take_while(|&c| c != ':').collect::<String>()
@@ -64,14 +66,14 @@ impl Monkey {
         let mtrue = lines[4].chars().skip_while(|&c| !c.is_digit(10)).collect::<String>().parse::<MonkeyId>().expect("Should parse true monkey");
         // "    If false: throw to monkey 3"
         let mfalse = lines[5].chars().skip_while(|&c| !c.is_digit(10)).collect::<String>().parse::<MonkeyId>().expect("Should parse false monkey");
-        let route_op = divisible_router(divisor, mtrue, mfalse);
-        Monkey::new(id, items, item_op, route_op)
+        Monkey::new(id, items, item_op, divisor, mtrue, mfalse)
     }
 }
 
 pub struct Monkeys {
     completed_round: usize,
     monkeys: Vec<Monkey>, // Priority queue maybe?
+    lazy_gcd: Option<ItemVal>,
 }
 
 impl Monkeys {
@@ -79,10 +81,22 @@ impl Monkeys {
         Monkeys {
             completed_round: 0,
             monkeys: vec![],
+            lazy_gcd: None,
         }
     }
 
-    pub fn do_round(&mut self) {
+    pub fn set_gcd(&mut self) {
+        // Numbers get too big.  But we just need to track modulo-congruent values, not the full value.
+        // We can pick a number P = product of all the divisors of all the monkeys.
+        // reducing itemval to (itemval mod P) won't change the value of (itemval mod N) for N where N | P.
+        // Because:
+        //   k a ≡ k b (mod kn) for any integer k [wikipedia]
+        let divisors = self.monkeys.iter().map(|m| m.divisor as ItemVal);
+        let product_of_divisors = divisors.fold(1 as ItemVal, |acc: ItemVal, x: ItemVal| acc.checked_mul(x).expect("GCD too big"));
+        self.lazy_gcd = Some(product_of_divisors);
+    }
+
+    pub fn do_round(&mut self, divide_by_three: bool) {
         // During a round, monkeys take a turn in order id 0 to id n.
         // On a turn, a monkey handles each item in order.
         // When handling an item the monkey does:
@@ -113,20 +127,28 @@ impl Monkeys {
                 assert!(this_monkey.id == i);
                 for itemval in &this_monkey.items {
                     // Inspect
-                    let newitemval = (this_monkey.item_op)(*itemval);
+                    let mut newitemval = (this_monkey.item_op)(*itemval);
                     this_monkey.inspections += 1;
                     // End Inspect
-                    let newnewitemval = newitemval / 3;
+                    newitemval = match divide_by_three {
+                        true => newitemval / 3,
+                        false => newitemval,
+                    };
+                    if self.lazy_gcd.is_some() {
+                        newitemval = newitemval % self.lazy_gcd.unwrap();
+                    }
                     // Throw
-                    let target_id = (this_monkey.route_op)(newnewitemval);
-                    println!(
-                        "monkey {} done-inspecting-itemval {} target {}",
-                        i, newnewitemval, target_id
-                    );
-
+                    let target_id = match newitemval % this_monkey.divisor == 0 {
+                        true => this_monkey.target_t,
+                        false => this_monkey.target_f,
+                    };
+                    //println!(
+                    //    "monkey {} done-inspecting-itemval {} target {}",
+                    //    i, newnewitemval, target_id
+                    //);
                     assert!(target_id < n_monkeys);
                     assert!(target_id != i);
-                    in_air.push((target_id, newnewitemval));
+                    in_air.push((target_id, newitemval));
                 }
             }
             // Everything is thrown to a different monkey now.
@@ -140,6 +162,7 @@ impl Monkeys {
         self.completed_round += 1;
     }
 
+    #[cfg(test)]  // For debugging during testing.
     pub fn pretty(&self) -> String {
         let mut s: String;
         s = format!(
@@ -158,7 +181,7 @@ impl Monkeys {
         s
     }
 
-    pub fn monkey_business(&self) -> u32 {
+    pub fn monkey_business(&self) -> usize {
         let mut insp = self
             .monkeys
             .iter()
@@ -166,8 +189,8 @@ impl Monkeys {
             .collect::<Vec<u32>>();
         insp.sort();
         insp.reverse();
-        insp[0] * insp[1]
-    }
+        (insp[0] as usize).checked_mul(insp[1] as usize).unwrap()
+        }
 
     pub fn new_from_file(filelines: &str) -> Self {
         let mut m = Monkeys::new();
@@ -180,11 +203,11 @@ impl Monkeys {
     }
 }
 
-fn item_times(n: isize) -> ItemOp {
+fn item_times(n: ItemVal) -> ItemOp {
     Box::new(move |i: ItemVal| -> ItemVal { i.checked_mul(n).unwrap() })
 }
 
-fn item_plus(n: isize) -> ItemOp {
+fn item_plus(n: ItemVal) -> ItemOp {
     Box::new(move |i| -> ItemVal { i.checked_add(n).unwrap() })
 }
 
@@ -192,16 +215,12 @@ fn item_squared() -> ItemOp {
     Box::new(move |i: ItemVal| -> ItemVal { i.checked_mul(i).unwrap() })
 }
 
-fn divisible_router(divisor: ItemVal, t: MonkeyId, f: MonkeyId) -> RouteOp {
-    Box::new(move |i: ItemVal| -> MonkeyId {
-        match i % divisor == 0 {
-            true => t,
-            false => f,
-        }
-    })
-}
+#[cfg(test)]
+const AOC_PROB1_MONKEY_BUSINESS: usize = 10605;
+#[cfg(test)]
+const AOC_PROB2_MONKEY_BUSINESS: usize= 2713310158;
 
-// Test the example from AoC Day 11 with explicitly constructed monkeys.
+// Test the example from AoC Day 11, problem 1, with explicitly constructed monkeys.
 #[test]
 fn test_monkeys_aoc_example_using_new() {
     let mut m = Monkeys::new();
@@ -209,29 +228,31 @@ fn test_monkeys_aoc_example_using_new() {
         0,
         VecDeque::from([79, 98]),
         item_times(19),
-        divisible_router(23, 2, 3),
+        23, 2, 3,
     ));
     m.monkeys.push(Monkey::new(
         1,
         VecDeque::from([54, 65, 75, 74]),
         item_plus(6),
-        divisible_router(19, 2, 0),
+        19, 2, 0,
     ));
     m.monkeys.push(Monkey::new(
         2,
         VecDeque::from([79, 60, 97]),
         item_squared(),
-        divisible_router(13, 1, 3),
+        13, 1, 3
     ));
     m.monkeys.push(Monkey::new(
         3,
         VecDeque::from([74]),
         item_plus(3),
-        divisible_router(17, 0, 1),
+        17, 0, 1,
     ));
+    m.set_gcd();
+
     for _ in 1..=20 {
         print!("{}", m.pretty());
-        m.do_round();
+        m.do_round(true);
     }
     print!("{}", m.pretty());
     assert_eq!(m.completed_round, 20);
@@ -248,8 +269,47 @@ fn test_monkeys_aoc_example_using_new() {
     assert_eq!(m.monkeys[1].inspections, 95);
     assert_eq!(m.monkeys[2].inspections, 7);
     assert_eq!(m.monkeys[3].inspections, 105);
-    assert_eq!(m.monkey_business(), 10605);
+    assert_eq!(m.monkey_business(), AOC_PROB1_MONKEY_BUSINESS);
 }
+
+// Test the example from AoC Day 11, problem 2, with explicitly constructed monkeys.
+#[test]
+fn test_monkeys_aoc_example_prob2_using_new() {
+    let mut m = Monkeys::new();
+    m.monkeys.push(Monkey::new(
+        0,
+        VecDeque::from([79, 98]),
+        item_times(19),
+        23, 2, 3,
+    ));
+    m.monkeys.push(Monkey::new(
+        1,
+        VecDeque::from([54, 65, 75, 74]),
+        item_plus(6),
+        19, 2, 0,
+    ));
+    m.monkeys.push(Monkey::new(
+        2,
+        VecDeque::from([79, 60, 97]),
+        item_squared(),
+        13, 1, 3
+    ));
+    m.monkeys.push(Monkey::new(
+        3,
+        VecDeque::from([74]),
+        item_plus(3),
+        17, 0, 1,
+    ));
+    m.set_gcd();
+    for _ in 1..=10_000 {
+        print!("{}", m.pretty());
+        m.do_round(false);
+    }
+    print!("{}", m.pretty());
+    assert_eq!(m.monkey_business(), AOC_PROB2_MONKEY_BUSINESS);
+}
+
+
 
 #[cfg(test)]
 const MONKEY_STR: &str = "\
@@ -314,7 +374,7 @@ fn test_aoc_prob1() {
 
     for _ in 1..=20 {
         print!("{}", m.pretty());
-        m.do_round();
+        m.do_round(true);
     }
     assert_eq!(m.monkey_business(), 10605);
 }

@@ -1,7 +1,8 @@
 # adventofcode2022
-I'm trying to solve Advent of Code 2022 while learning the Rust language.  I'm writing code as if for work or an OSS project, not as fast as possible: handling most errors, structuring code as a library, and writing unit tests.
+I'm trying to solve Advent of Code 2022 while learning the Rust language.  The goal is not "code golf" or speed.  It is to
+learn to use Rust as if I were using it for work or an OSS project: handling errors, using modules and packages, and writing tests.
 
-Each directory `day`_`n`_ is a crate with a binary.
+Each directory `day`_`n`_ is a crate with a library and a binary.
 The website examples are used as unit test inputs.
 Problem inputs are saved as `day`_`n`_`/input.txt`.
 For example:
@@ -48,10 +49,31 @@ Handling more complex parsing - using match over if/then seemed hard at first, b
 Defining a custom error type as an enum to provide details.
 `fold()` method on iterators.
 Defining an additional module within a crate -  [good reference](https://www.sheshbabu.com/posts/rust-module-system/)).
-Working with nested vectors - error handling is tricky. 
+Working with nested vectors - error handling is tricky inside a double for loop. 
 Defining a function that operates on iterators using type bounds on the iterator type and its item type.
 Used crate "grid" which lets you iterate over a 2d-like array rowwise or columnwise.  Very cool how the lazy
 iterators stack up to let you go in any direction.
+
+#### Day 9
+This one was annoying.
+Used crate `cgmath`.
+
+#### Day 10
+Writing classes, or rather types with methods.
+
+#### Day 11
+Learned about when to use newtype vs type aliasing.  Chose type aliasing.
+
+Learned different ways to handle an inner loop that wants
+to modify two different indexes of a slice.  
+
+
+#### Modifying two indexes of an array
+
+One way is to use split_at_mut(), putting the two things
+you want to change in different partitions.  For this problem, I knew which ones I wanted at different times, with differet lifetimes of the reference.  So things would have gotten complex.
+
+The other way was to buffer all the needed changes in a temporary list, and then apply them in a different scope, so that I wasn't mutating two elements in the same scope.  This worked well.
 
 ### Longer Notes
 

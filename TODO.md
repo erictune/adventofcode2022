@@ -1,12 +1,13 @@
 # Presently
-Write an "FinalBlankOnly line iterator"
-Write a tuple-yielding iterator for files with fixed number fixed-typed of items per line.
+Day 11:
+Prob1 is solved.
+Fix overflow for prob2.
 
-Consider writing a directional iterator method, which could complement the grid crate:
-Grid::iter_dir({N|S|E|W}, start_x, start_y) : returns an iterator that moves up, down, left or right starting from a point on the grid.
+# Later
+Problem 22 looks interesting - can try using an ordered map crate to represent the tree, or use a tree data structure crate.
 
 # After AoC
 
 I would like to write a quick Mandelbrot set generator, 
 and then extend it to allow different threads to work 
-on blocks of the image in parallel.
+on blocks of the image in parallel.  Looks like iced.rs is a good ui library.

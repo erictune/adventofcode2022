@@ -4,6 +4,9 @@ use cgmath::vec2;
 use cgmath::Vector2;
 use std::collections::HashSet;
 
+// TODO: The answer I get for prob2 is wrong: 3028.
+// Need to test the test cases.
+
 /// Helper function to model rope segments as a trailing segment (t) which stays within an 8-neighbor of the leader (h).
 /// Must call after ever single-step move of the head point. 
 /// Panics if h is 3 or more steps away from h (Euclidean distance).
@@ -47,8 +50,8 @@ fn get_follower_moves(h: Point2<i32>, t: Point2<i32>) -> Vec<Vector2<i32>> {
 // TODO: try using `&[_]` or an iterator instead of `&mut Vec<_>`.
 fn move_rope(segments: &mut Vec<Point2<i32>>, head_idx: usize, head_move: Vector2<i32>, visited: &mut HashSet<Point2<i32>>) {
     // Move the head of our subrope (which might also be the tail of the full rope).
-    let tail_idx = segments.len() - 1; 
     segments[head_idx] += head_move;
+    let tail_idx = segments.len() - 1; 
     if head_idx+1 == tail_idx { 
         // We are down to just 2 segments.  Just move the tail.
         let follower_moves = get_follower_moves(segments[head_idx], segments[tail_idx]);
@@ -61,10 +64,13 @@ fn move_rope(segments: &mut Vec<Point2<i32>>, head_idx: usize, head_move: Vector
     } else {
         // We have multiple segments: recursively apply moves.
         let follower_moves = get_follower_moves(segments[head_idx], segments[head_idx+1]);
+        let mut total_move = vec2(0,0);
         for mv in follower_moves {
             move_rope(segments, head_idx+1, mv, visited);
         }
+
     }
+
 }
 
 //if follower_move == (Vector2{x: 0, y:0}) {

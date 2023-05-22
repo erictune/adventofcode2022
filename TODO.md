@@ -8,6 +8,7 @@ Problem 22 looks interesting - can try using an ordered map crate to represent t
 
 # After AoC
 
-I would like to write a quick Mandelbrot set generator, 
-and then extend it to allow different threads to work 
-on blocks of the image in parallel.  Looks like iced.rs is a good ui library.
+I would like to write a Mandelbrot set generator in rust.
+- do on mac with egui graphics and zooming
+- Explore different types of parallelism - basic, ILP, multi-core, simd (RPi 4b has vectors too).  
+- use Rayon for parallelism, also SIMD.
